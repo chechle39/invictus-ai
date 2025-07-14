@@ -1,0 +1,19 @@
+{
+  "name": "migration-map-cli",
+  "version": "1.0.0",
+  "description": "CLI tool to generate migration map using OpenAI",
+  "main": "migration-map.js",
+  "bin": {
+    "migration-map": "./migration-map.js"
+  },
+  "scripts": {
+    "start": "node migration-map.js"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "openai": "^4.0.0",
+    "pdfmake": "^0.2.7"
+  },
+  "author": "",
+  "license": "MIT"
+}
