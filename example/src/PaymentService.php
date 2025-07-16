@@ -1,4 +1,5 @@
 <?php
+require_once 'User.php';
 class PaymentService {
     private $balance;
     private $logs = [];
@@ -26,11 +27,29 @@ class PaymentService {
         }
         $this->balance -= $amount;
         $this->log("Processed payment: $amount");
+        // Giả lập truy vấn SQL
+        $sql = "INSERT INTO payments (user_id, amount, status) VALUES (?, ?, 'completed');";
+        $this->log("SQL: $sql");
         return [
             'success' => true,
             'message' => 'Payment processed',
             'balance' => $this->balance
         ];
+    }
+
+    public function processForUser($user, $amount) {
+        if (!$user->isValid()) {
+            $this->log('Invalid user');
+            return [
+                'success' => false,
+                'message' => 'Invalid user',
+                'balance' => $this->balance
+            ];
+        }
+        // Gọi process
+        $result = $this->process($amount);
+        $result['user_id'] = $user->id;
+        return $result;
     }
 
     private function log($msg) {
