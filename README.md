@@ -1,140 +1,90 @@
-# Migration Map CLI
+# Migration Map Tool (All-in-One)
 
-Tool CLI Node.js giúp tạo bản đồ chuyển đổi (migration map) cho quá trình migrate hệ thống, sử dụng OpenAI để phân tích và gợi ý công nghệ tương đương.
+## Mục đích
 
-## Tính năng chính
+Tool này giúp bạn phân tích, lập kế hoạch migrate (chuyển đổi) dự án code từ ngôn ngữ này sang ngôn ngữ khác một cách thông minh:
 
-- **Phân tích code tự động:** Quét thư mục mã nguồn và phân tích từng file
-- **AI-powered migration mapping:** Sử dụng OpenAI để phân loại loại chuyển đổi và gợi ý công nghệ tương đương
-- **Hỗ trợ đa ngôn ngữ:** PHP, Python, Java, Node.js, C#, Go, v.v.
-- **Export đa định dạng:** JSON và PDF với bảng chi tiết
-- **Error handling:** Tự động xử lý lỗi và hiển thị rõ ràng trong PDF
+- Tự động nhận diện các file/module có liên kết với nhau (dependency graph).
+- Phát hiện và gợi ý migrate database (schema, truy vấn SQL, ORM, GraphQL...)
+- Đề xuất công nghệ tương ứng ở ngôn ngữ đích.
+- Xuất kết quả ra file JSON và PDF, dễ đọc, dễ kiểm tra.
 
-## Cài đặt
+## Tính năng nổi bật
 
-1. **Cài Node.js >= 16**
-2. **Cài dependencies:**
-   ```bash
-   npm install
-   ```
-3. **Đặt biến môi trường OpenAI API key:**
+- **Nhóm file/module liên kết**: Các file có liên kết sẽ được nhóm thành từng nhóm/module rõ ràng.
+- **Gợi ý database hiện đại**: Tự động phát hiện schema, truy vấn SQL, gợi ý ORM, GraphQL, NoSQL nếu phù hợp.
+- **Hỗ trợ đa ngôn ngữ**: PHP, JS, TS, Python, Java, C#, Ruby...
 
-   ```bash
-   # Windows PowerShell:
-   $env:OPENAI_API_KEY="your_openai_api_key"
+## Cách sử dụng
 
-   # Windows CMD:
-   set OPENAI_API_KEY=your_openai_api_key
-
-   # Mac/Linux:
-   export OPENAI_API_KEY=your_openai_api_key
-   ```
-
-## Sử dụng
-
-### Cú pháp cơ bản
+### 1. Cài đặt dependencies
 
 ```bash
-node migration-map.js <sourceDir> --from <sourceLang> --to <targetLang> [options]
+npm install
 ```
 
-### Tham số
+### 2. Thiết lập biến môi trường OpenAI API Key
 
-- `<sourceDir>`: Thư mục mã nguồn cần phân tích
-- `--from <sourceLang>`: Ngôn ngữ nguồn (php, python, java, nodejs, csharp, go, v.v.)
-- `--to <targetLang>`: Ngôn ngữ đích (nodejs, python, java, csharp, go, v.v.)
+- **PowerShell:**
+  ```powershell
+  $env:OPENAI_API_KEY="your_openai_api_key"
+  ```
+- **CMD:**
+  ```cmd
+  set OPENAI_API_KEY=your_openai_api_key
+  ```
 
-### Options
-
-- `-o, --output <file>`: Tên file JSON xuất kết quả (mặc định: migration-map.json)
-- `--pdf <file>`: Xuất migration map ra file PDF có bảng
-
-### Ví dụ sử dụng
-
-**Phân tích PHP sang Node.js:**
+### 3. Chạy tool migrate
 
 ```bash
-node migration-map.js ./example/src --from php --to nodejs --pdf ./example/result/migration-map.pdf -o ./example/result/migration-map.json
+node migration-map.js <sourceDir> --from <sourceLang> --to <targetLang> -o <output.json> --pdf <output.pdf>
 ```
 
-**Phân tích Python sang Java:**
+- `<sourceDir>`: Thư mục chứa source code dự án.
+- `--from`: Ngôn ngữ nguồn (vd: php, java, python...)
+- `--to`: Ngôn ngữ đích (vd: nodejs, java, python...)
+- `-o`: File kết quả JSON.
+- `--pdf`: File kết quả PDF.
+
+**Ví dụ:**
 
 ```bash
-node migration-map.js ./example/src --from python --to java --pdf ./example/result/migration-map.pdf
+node migration-map.js example/src --from php --to nodejs -o example/result/migration-map.json --pdf example/result/migration-map.pdf
 ```
 
-**Phân tích Java sang C#:**
+## Ý nghĩa các khái niệm
 
-```bash
-node migration-map.js ./example/src --from java --to csharp --pdf ./example/result/migration-map.pdf
-```
+### Dependency (liên kết giữa các file)
 
-## Kết quả
+- Tool sẽ tự động phát hiện các file nào gọi nhau, import nhau, hoặc có quan hệ logic.
+- Các file liên kết sẽ được nhóm thành 1 module/nhóm, giúp bạn migrate logic tổng thể, không bị rời rạc.
 
-### File JSON
+### Database & ORM
 
-Chứa migration map với các trường:
+- Tool sẽ tự động phát hiện file schema (.sql), truy vấn SQL trong code, và gợi ý công nghệ database hiện đại ở ngôn ngữ đích.
+- **ORM (Object-Relational Mapping):**
+  - Là kỹ thuật giúp bạn thao tác database bằng object/class thay vì viết SQL thuần.
+  - Ví dụ: Sequelize, TypeORM (Node.js), Eloquent (PHP), SQLAlchemy (Python)...
+  - Giúp code dễ bảo trì, bảo mật, chuyển đổi DB dễ dàng.
 
-- `file`: Tên file/module
-- `migrationType`: Loại chuyển đổi (direct migration, rewrite, special review)
-- `suggestedTech`: Gợi ý công nghệ tương đương
-- `note`: Ghi chú chi tiết về migration
+### Gợi ý công nghệ hiện đại
 
-### File PDF
+- Tool sẽ gợi ý các công nghệ phù hợp ở ngôn ngữ đích: ORM, GraphQL, NoSQL, REST, v.v.
+- Giúp bạn refactor project theo hướng hiện đại, dễ mở rộng.
 
-- Bảng migration map dễ theo dõi
-- Tự động xuống dòng cho nội dung dài
-- Highlight các trường hợp error
-- Trang ngang (landscape) để hiển thị nhiều nội dung
+## Kết quả xuất ra
 
-## Ví dụ kết quả
+- **JSON**: Dễ dùng cho automation, kiểm tra chi tiết.
+- **PDF**: Dễ đọc, trình bày rõ ràng từng nhóm file/module, gợi ý migration, database, công nghệ.
 
-### PHP → Node.js
+## Ví dụ kết quả (PDF/JSON)
 
-| File               | Migration Type | Suggested Tech   | Note                                            |
-| ------------------ | -------------- | ---------------- | ----------------------------------------------- |
-| UserController.php | Rewrite        | Express.js       | Convert PHP class to Node.js Express controller |
-| config.php         | Rewrite        | JSON config      | Convert PHP array to Node.js JSON configuration |
-| schema.sql         | Special review | MongoDB/Mongoose | SQL to NoSQL migration requires careful review  |
+| Files                                            | Migration Plan                                                             | Suggested Tech        | Database Suggestion    | Note                                |
+| ------------------------------------------------ | -------------------------------------------------------------------------- | --------------------- | ---------------------- | ----------------------------------- |
+| UserController.php, PaymentService.php, User.php | Refactor thành các module Node.js, dùng ORM Sequelize, chuyển SQL sang ORM | Sequelize, ES6 module | PostgreSQL/MySQL + ORM | Lưu ý async/await, khác biệt syntax |
+| config.php                                       | Chuyển sang JSON config, dùng package 'config'                             | config (Node.js)      | ORM cho DB             | Lưu ý khác biệt cấu hình            |
+| schema.sql                                       | Chuyển schema sang model ORM                                               | Sequelize/Knex.js     | PostgreSQL/MySQL       | Lưu ý mapping type                  |
 
-### Python → Java
+## Liên hệ & đóng góp
 
-| File               | Migration Type | Suggested Tech         | Note                                           |
-| ------------------ | -------------- | ---------------------- | ---------------------------------------------- |
-| user_controller.py | Rewrite        | Spring Boot            | Convert Python class to Java Spring controller |
-| config.py          | Rewrite        | application.properties | Convert Python dict to Java properties file    |
-
-## Cấu trúc thư mục example
-
-```
-example/
-  src/           # Chứa code mẫu để test
-    UserController.php
-    User.php
-    config.php
-    PaymentService.php
-    schema.sql
-    # Có thể thêm file Python, Java, v.v.
-  result/        # Chứa kết quả phân tích
-    migration-map.json
-    migration-map.pdf
-  README.md      # Hướng dẫn test
-```
-
-## Lưu ý
-
-- **Chi phí OpenAI:** Mỗi file tốn khoảng $0.0005–$0.003 (với gpt-3.5-turbo)
-- **API Key:** Đảm bảo có đủ quota và API key hợp lệ
-- **Font PDF:** Cần tải font Roboto về thư mục `fonts/` nếu gặp lỗi font
-- **File size:** Tool tự động xử lý file lớn và nội dung dài
-
-## Mở rộng
-
-- Thêm support cho ngôn ngữ mới
-- Tích hợp với CI/CD pipeline
-- Thêm tính năng phân tích dependency
-- Export ra định dạng khác (CSV, Excel, Markdown)
-
-## License
-
-MIT
+- Nếu có vấn đề, góp ý, hoặc muốn mở rộng tool cho ngôn ngữ khác, hãy liên hệ hoặc tạo issue trên repo!
