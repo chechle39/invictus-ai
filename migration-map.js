@@ -257,6 +257,27 @@ Reply in JSON format, in English:
   }
 }
 
+async function analyzeGroupPromptWithRetry(group, maxRetries = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await analyzeGroupPrompt(group);
+    } catch (err) {
+      lastError = err;
+      console.log(`Retry ${attempt}/${maxRetries} failed: ${err.message}`);
+      await new Promise((res) => setTimeout(res, 1000 * attempt)); // backoff
+    }
+  }
+  // Nếu vẫn fail, trả về lỗi cuối cùng
+  return {
+    files: group.files,
+    migrationPlan: "error",
+    suggestedTech: "",
+    databaseSuggestion: "",
+    note: `Failed after ${maxRetries} retries: ${lastError.message}`,
+  };
+}
+
 // --- Export to PDF using pdfmake ---
 function exportToPDF(data, pdfFile) {
   const fonts = {
@@ -426,7 +447,7 @@ function findConnectedComponents(dependencyGraph) {
       from,
       to,
     };
-    results.push(await analyzeGroupPrompt(group));
+    results.push(await analyzeGroupPromptWithRetry(group));
   }
 
   fs.writeFileSync(output, JSON.stringify(results, null, 2), "utf-8");
