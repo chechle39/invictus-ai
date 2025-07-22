@@ -10,9 +10,11 @@
     "start": "node migration-map.js"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
     "commander": "^11.0.0",
-    "openai": "^4.0.0",
-    "pdfmake": "^0.2.7"
+    "express": "^5.1.0",
+    "openai": "^4.104.0",
+    "pdfmake": "^0.2.20"
   },
   "author": "",
   "license": "MIT"

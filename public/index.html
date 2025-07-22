@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migration Map Web UI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h1 class="card-title mb-0">Migration Map Generator</h1>
+              <button class="btn btn-outline-secondary btn-sm" id="setApiKeyBtn">Set API Key</button>
+            </div>
+            <form id="migrationForm">
+              <div class="mb-3">
+                <label class="form-label">Source Directory (trên server):</label>
+                <input type="text" name="sourceDir" class="form-control" required placeholder="VD: example/src">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Source Language:</label>
+                <select name="from" class="form-select">
+                  <option value="php">PHP</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                  <option value="nodejs">Node.js</option>
+                  <option value="csharp">C#</option>
+                  <option value="ruby">Ruby</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Target Language:</label>
+                <select name="to" class="form-select">
+                  <option value="nodejs">Node.js</option>
+                  <option value="php">PHP</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                  <option value="csharp">C#</option>
+                  <option value="ruby">Ruby</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Output JSON file (server path):</label>
+                <input type="text" name="output" class="form-control" value="example/result/migration-map.json">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Output PDF file (server path, optional):</label>
+                <input type="text" name="pdf" class="form-control" value="example/result/migration-map.pdf">
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Generate Migration Map</button>
+              </div>
+            </form>
+            <div class="result mt-4" id="result"></div>
+            <div class="download-links mt-2" id="downloadLinks"></div>
+            <div class="error mt-3" id="error"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for API Key -->
+  <div class="modal fade" id="apiKeyModal" tabindex="-1" aria-labelledby="apiKeyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apiKeyModalLabel">Set OpenAI API Key</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="password" id="apiKeyInput" class="form-control" placeholder="sk-..." autocomplete="off">
+          <div class="form-text">API key sẽ được lưu trên trình duyệt của bạn (localStorage).</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveApiKeyBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const form = document.getElementById('migrationForm');
+    const resultDiv = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+    const downloadLinks = document.getElementById('downloadLinks');
+    const setApiKeyBtn = document.getElementById('setApiKeyBtn');
+    const apiKeyModal = new bootstrap.Modal(document.getElementById('apiKeyModal'));
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+
+    setApiKeyBtn.onclick = () => {
+      apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
+      apiKeyModal.show();
+    };
+    saveApiKeyBtn.onclick = () => {
+      localStorage.setItem('openai_api_key', apiKeyInput.value.trim());
+      apiKeyModal.hide();
+    };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      resultDiv.textContent = '';
+      errorDiv.textContent = '';
+      downloadLinks.innerHTML = '';
+      const data = Object.fromEntries(new FormData(form));
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const apiKey = localStorage.getItem('openai_api_key');
+        if (apiKey) headers['x-openai-api-key'] = apiKey;
+        const res = await fetch('/migration_map', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          errorDiv.innerHTML = `<div class='alert alert-danger'>${json.error || 'Unknown error'}</div>`;
+          return;
+        }
+        resultDiv.innerHTML = '<h3>Migration Map Result (JSON):</h3>' +
+          '<pre class="bg-dark text-light p-3 rounded">' + JSON.stringify(json.results, null, 2) + '</pre>';
+        if (json.output) {
+          downloadLinks.innerHTML += `<a class="btn btn-success me-2" href="/${json.output}" download>Download JSON</a>`;
+        }
+        if (json.pdf) {
+          downloadLinks.innerHTML += `<a class="btn btn-warning" href="/${json.pdf}" download>Download PDF</a>`;
+        }
+        if (json.outputFiles && json.outputFiles.length > 0) {
+          let list = '<h5 class="mt-4">Output Folder Files:</h5><ul class="list-group mb-3">';
+          for (const file of json.outputFiles) {
+            list += `<li class="list-group-item"><a href="${file.url}" target="_blank">${file.name}</a></li>`;
+          }
+          list += '</ul>';
+          downloadLinks.innerHTML += list;
+        }
+      } catch (err) {
+        errorDiv.innerHTML = `<div class='alert alert-danger'>${err.message}</div>`;
+      }
+    };
+  </script>
+</body>
+
+</html>
